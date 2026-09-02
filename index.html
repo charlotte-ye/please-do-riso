@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Riso Effect Web</title>
+
+  <link rel="stylesheet" href="style.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.min.js"></script>
+  <script src="p5.riso.js"></script>
+</head>
+
+<body>
+
+  <header class="site-header">
+    <div class="nav-wrapper">
+      <div class="logo">RISO EFFECT WEB</div>
+
+      <nav class="nav-menu">
+        <a href="#controls">Upload</a>
+        <a href="#controls">Colors</a>
+        <a href="#controls">Generate</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="riso-page">
+
+    <section id="controls">
+      <h1>RISO EFFECT WEB</h1>
+
+      <p class="intro">
+        Upload your image, choose two Riso ink colors, and generate a shifting print preview.
+      </p>
+
+      <div class="control-panel">
+
+        <div class="control-group">
+          <label for="upload">Upload Image</label>
+          <input type="file" id="upload" accept="image/*">
+        </div>
+
+        <div class="select-group">
+          <label for="color1">Layer 1</label>
+          <select id="color1">
+            <option value="lightlime">lightlime</option>
+            <option value="lightorange">lightorange</option>
+            <option value="fluorescentpink">fluorescentpink</option>
+            <option value="teal">teal</option>
+            <option value="blue">blue</option>
+            <option value="yellow">yellow</option>
+            <option value="black">black</option>
+          </select>
+        </div>
+
+        <div class="select-group">
+          <label for="color2">Layer 2</label>
+          <select id="color2">
+            <option value="lightorange">lightorange</option>
+            <option value="lightlime">lightlime</option>
+            <option value="fluorescentpink">fluorescentpink</option>
+            <option value="teal">teal</option>
+            <option value="blue">blue</option>
+            <option value="yellow">yellow</option>
+            <option value="black">black</option>
+          </select>
+        </div>
+
+        <button id="generateBtn">Generate Riso Effect</button>
+
+      </div>
+
+      <p class="hint">
+        Step 1: upload image · Step 2: choose colors · Step 3: click generate
+      </p>
+    </section>
+
+    <section id="canvas-holder"></section>
+
+  </main>
+
+  <script src="sketch.js"></script>
+
+</body>
+</html>

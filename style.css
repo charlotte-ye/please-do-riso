@@ -112,7 +112,8 @@ body {
 
 .control-group,
 .select-group,
-.range-group {
+.range-group,
+.background-group {
   display: flex;
   flex-direction: column;
   gap: 7px;
@@ -172,6 +173,88 @@ button:hover {
   transform: scale(1.04);
 }
 
+button:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.ratio-group select {
+  min-width: 155px;
+}
+
+.background-options {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 36px;
+}
+
+input[type="color"] {
+  width: 36px;
+  height: 36px;
+  padding: 3px;
+  background: white;
+  border: 1px solid #bbb;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+input[type="color"]::-webkit-color-swatch {
+  border: none;
+  border-radius: 50%;
+}
+
+.color-swatch {
+  width: 30px;
+  min-width: 30px;
+  height: 30px;
+  padding: 0;
+  background: var(--swatch-color);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 50%;
+  box-shadow: none;
+}
+
+.color-swatch:hover {
+  background: var(--swatch-color);
+  box-shadow: 0 0 0 3px rgba(34, 34, 34, 0.12);
+  transform: scale(1.08);
+}
+
+.color-swatch.selected {
+  box-shadow: 0 0 0 2px white, 0 0 0 4px #222;
+}
+
+.transparent-swatch,
+.transparent-swatch:hover {
+  background:
+    linear-gradient(45deg, transparent 46%, #e15a5a 47%, #e15a5a 53%, transparent 54%),
+    conic-gradient(#ddd 25%, white 0 50%, #ddd 0 75%, white 0);
+  background-size: 100% 100%, 10px 10px;
+}
+
+.action-group {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.secondary-button {
+  color: #222;
+  background: white;
+  border: 1px solid #222;
+}
+
+.secondary-button:hover {
+  color: white;
+}
+
 .hint {
   margin-top: 20px;
   color: #666;
@@ -190,7 +273,9 @@ canvas {
   display: block;
   max-width: 100%;
   height: auto !important;
-  background-color: #f7f7f1;
+  background-color: white;
+  background-image: conic-gradient(#e7e7e7 25%, white 0 50%, #e7e7e7 0 75%, white 0);
+  background-size: 20px 20px;
   border-radius: 24px;
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
 }
@@ -250,6 +335,21 @@ canvas {
   input[type="range"] {
     width: 100%;
     max-width: none;
+  }
+
+  .background-options {
+    flex-wrap: wrap;
+  }
+
+  .color-swatch {
+    width: 32px;
+    min-width: 32px;
+    height: 32px;
+  }
+
+  .action-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
   }
 
   canvas {

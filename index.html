@@ -69,11 +69,36 @@
           <input type="range" id="dotSize" min="4" max="18" value="8" step="1">
         </div>
 
-        <button id="generateBtn" type="button">Generate Riso Effect</button>
+        <div class="select-group ratio-group">
+          <label for="canvasRatio">Canvas Ratio</label>
+          <select id="canvasRatio">
+            <option value="square" selected>Square · 1:1</option>
+            <option value="landscape">Landscape · 4:3</option>
+            <option value="portrait">Portrait · 3:4</option>
+          </select>
+        </div>
+
+        <div class="background-group">
+          <label for="backgroundColor">Background</label>
+
+          <div class="background-options">
+            <input type="color" id="backgroundColor" value="#fcfaf0" aria-label="Choose a custom background color">
+            <button class="color-swatch" type="button" data-background="#ffffff" style="--swatch-color: #ffffff" aria-label="White background" title="White"></button>
+            <button class="color-swatch" type="button" data-background="#e2edce" style="--swatch-color: #e2edce" aria-label="Light green background" title="#e2edce"></button>
+            <button class="color-swatch" type="button" data-background="#dbecdf" style="--swatch-color: #dbecdf" aria-label="Mint background" title="#dbecdf"></button>
+            <button class="color-swatch selected" type="button" data-background="#fcfaf0" style="--swatch-color: #fcfaf0" aria-label="Warm white background" title="#fcfaf0"></button>
+            <button class="color-swatch transparent-swatch" type="button" data-background="transparent" aria-label="Transparent background" title="Transparent"></button>
+          </div>
+        </div>
+
+        <div class="action-group">
+          <button id="generateBtn" type="button">Generate Riso Effect</button>
+          <button id="saveBtn" class="secondary-button" type="button" disabled>Save PNG</button>
+        </div>
       </div>
 
       <p class="hint">
-        Upload image · choose colors · generate once · then adjust colors and dots live
+        Upload image · generate once · adjust colors, dots, ratio and background live · save PNG
       </p>
     </section>
 

@@ -1,59 +1,53 @@
-let img;
-let layer1;
-let layer2;
+let img = null;
+let previewImage = null;
+let halftoneLayer1 = null;
+let halftoneLayer2 = null;
+let layer1 = null;
+let layer2 = null;
 let generated = false;
 
-function setup() {
-  let canvas = createCanvas(600, 600);
-  canvas.parent("canvas-holder");
+const CANVAS_SIZE = 600;
+const PAPER_COLOR = [239, 241, 231];
+let updateTimer = null;
 
+function setup() {
   pixelDensity(1);
 
-  layer1 = new Riso("teal");
-  layer2 = new Riso("yellow");
+  const canvas = createCanvas(CANVAS_SIZE, CANVAS_SIZE);
+  canvas.parent("canvas-holder");
 
   document.getElementById("upload").addEventListener("change", handleUpload);
   document.getElementById("generateBtn").addEventListener("click", generateRiso);
+
+  document.getElementById("color1").addEventListener("change", updateEffectLive);
+  document.getElementById("color2").addEventListener("change", updateEffectLive);
+  document.getElementById("dotSize").addEventListener("input", scheduleDotUpdate);
+
+  // The preview is static until the user changes a control.
+  // This avoids unnecessary work on phones.
+  noLoop();
 }
 
 function draw() {
-  background(239, 241, 231);
-  clearRiso();
-
+  background(...PAPER_COLOR);
   imageMode(CORNER);
 
-  if (!img) {
+  if (!img || !previewImage) {
     drawMessage("Upload an image first");
     return;
   }
 
-  let centeredImage = makeCenteredImage(img);
-
   if (!generated) {
-    image(centeredImage, 0, 0);
-
-    fill(40);
-    noStroke();
-    textAlign(CENTER, CENTER);
-    textSize(14);
-    text("Choose colors, then click Generate", width / 2, height - 30);
+    image(previewImage, 0, 0);
+    drawBottomMessage("Choose colors, then click Generate");
     return;
   }
 
-  let gray = toGray(centeredImage);
-  gray.filter(POSTERIZE, 4);
-  gray.filter(BLUR, 0.5);
+  clearRiso();
 
-  let ht1 = halftoneImage(gray, 15, 8);
-  let ht2 = halftoneImage(gray, -15, 8);
-
-  let t = millis() * 0.01;
-  let dx = sin(t * 0.8) * 3;
-  let dy = cos(t * 0.6) * 3;
-
-  layer1.image(ht1, dx, dy);
-  layer2.image(ht2, -dx, -dy);
-
+  // A small fixed offset imitates Riso misregistration.
+  layer1.image(halftoneLayer1, 1.5, 1.5);
+  layer2.image(halftoneLayer2, -1.5, -1.5);
   drawRiso();
 }
 
@@ -62,102 +56,154 @@ function handleUpload(event) {
 
   if (!file) return;
 
-  const url = URL.createObjectURL(file);
+  generated = false;
+  const objectURL = URL.createObjectURL(file);
 
-  loadImage(url, function (loadedImg) {
-    img = loadedImg;
-    generated = false;
-    console.log("image uploaded");
-  });
+  loadImage(
+    objectURL,
+    (loadedImage) => {
+      img = loadedImage;
+      previewImage = makeCenteredImage(img);
+      halftoneLayer1 = null;
+      halftoneLayer2 = null;
+      URL.revokeObjectURL(objectURL);
+      redraw();
+    },
+    () => {
+      URL.revokeObjectURL(objectURL);
+      alert("The image could not be loaded. Please try a PNG or JPG file.");
+    }
+  );
 }
 
 function generateRiso() {
-  if (!img) {
+  if (!img || !previewImage) {
     alert("Please upload an image first.");
     return;
   }
 
-  let color1 = document.getElementById("color1").value;
-  let color2 = document.getElementById("color2").value;
+  buildEffect();
+}
 
+function buildEffect() {
+  const color1 = document.getElementById("color1").value;
+  const color2 = document.getElementById("color2").value;
+  const dotSize = Number(document.getElementById("dotSize").value);
+
+  // Remove every old channel before making the new pair.
+  // This prevents layers from accumulating after repeated clicks.
+  Riso.channels = [];
   layer1 = new Riso(color1);
   layer2 = new Riso(color2);
 
+  // Image processing happens once per click instead of 60 times per second.
+  // This makes the page much more reliable on phones.
+  const gray = toGray(previewImage);
+  gray.filter(POSTERIZE, 4);
+  gray.filter(BLUR, 0.5);
+
+  halftoneLayer1 = makeHalftone(gray, 15, dotSize);
+  halftoneLayer2 = makeHalftone(gray, -15, dotSize);
   generated = true;
-
-  console.log("riso generated");
+  redraw();
 }
 
-function makeCenteredImage(src) {
-  let g = createGraphics(width, height);
-
-  g.background(255);
-
-  let ratio = min(width / src.width, height / src.height);
-  let w = src.width * ratio;
-  let h = src.height * ratio;
-
-  let x = (width - w) / 2;
-  let y = (height - h) / 2;
-
-  g.image(src, x, y, w, h);
-
-  return g;
+function updateEffectLive() {
+  if (generated) buildEffect();
 }
 
-function toGray(src) {
-  let g = createGraphics(width, height);
+function scheduleDotUpdate() {
+  if (!generated) return;
 
-  g.background(255);
-  g.image(src, 0, 0);
-  g.filter(GRAY);
-
-  return g;
+  clearTimeout(updateTimer);
+  updateTimer = setTimeout(buildEffect, 50);
 }
 
-function halftoneImage(src, angle, step) {
-  let dotLayer = createGraphics(width, height);
+function makeCenteredImage(source) {
+  const graphic = createGraphics(width, height);
+  graphic.pixelDensity(1);
+  graphic.background(255);
+  graphic.imageMode(CORNER);
 
-  dotLayer.clear();
+  const imageArea = width - 100;
+  const ratio = min(imageArea / source.width, imageArea / source.height);
+  const imageWidth = source.width * ratio;
+  const imageHeight = source.height * ratio;
+  const x = (width - imageWidth) / 2;
+  const y = (height - imageHeight) / 2;
 
-  src.loadPixels();
+  graphic.image(source, x, y, imageWidth, imageHeight);
+  return graphic;
+}
 
-  dotLayer.push();
+function toGray(source) {
+  const graphic = createGraphics(width, height);
+  graphic.pixelDensity(1);
+  graphic.background(255);
+  graphic.image(source, 0, 0);
+  graphic.filter(GRAY);
+  return graphic;
+}
 
-  dotLayer.translate(width / 2, height / 2);
-  dotLayer.rotate(radians(angle));
-  dotLayer.translate(-width / 2, -height / 2);
+function makeHalftone(source, angleInDegrees, step) {
+  const dots = createGraphics(width, height);
+  dots.pixelDensity(1);
 
-  dotLayer.noStroke();
-  dotLayer.fill(0);
+  // p5.riso converts white pixels to transparent ink and black pixels to
+  // opaque ink. A white background is essential; clear() can become black.
+  dots.background(255);
+  dots.noStroke();
+  dots.fill(0);
 
-  for (let y = 0; y < height; y += step) {
-    for (let x = 0; x < width; x += step) {
-      let index = (x + y * width) * 4;
+  source.loadPixels();
 
-      let r = src.pixels[index];
-      let g = src.pixels[index + 1];
-      let b = src.pixels[index + 2];
+  const angle = radians(angleInDegrees);
+  const cosAngle = cos(angle);
+  const sinAngle = sin(angle);
+  const centerX = width / 2;
+  const centerY = height / 2;
+  const radius = ceil(sqrt(width * width + height * height) / 2) + step;
 
-      let brightness = (r + g + b) / 3;
+  // Rotate the dot grid mathematically and only draw points that land inside
+  // the canvas. This avoids the visible tilted-square edges from the old code.
+  for (let gridY = -radius; gridY <= radius; gridY += step) {
+    for (let gridX = -radius; gridX <= radius; gridX += step) {
+      const x = centerX + gridX * cosAngle - gridY * sinAngle;
+      const y = centerY + gridX * sinAngle + gridY * cosAngle;
 
-      let size = map(brightness, 0, 255, step, 0);
+      if (x < 0 || x >= width || y < 0 || y >= height) continue;
 
-      if (size > 0.3) {
-        dotLayer.circle(x, y, size);
+      const sampleX = constrain(floor(x), 0, width - 1);
+      const sampleY = constrain(floor(y), 0, height - 1);
+      const index = (sampleX + sampleY * width) * 4;
+
+      const red = source.pixels[index];
+      const green = source.pixels[index + 1];
+      const blue = source.pixels[index + 2];
+      const brightness = (red + green + blue) / 3;
+      const dotSize = map(brightness, 0, 255, step, 0);
+
+      if (dotSize > 0.3) {
+        dots.circle(x, y, dotSize);
       }
     }
   }
 
-  dotLayer.pop();
-
-  return dotLayer;
+  return dots;
 }
 
-function drawMessage(msg) {
+function drawMessage(message) {
   fill(40);
   noStroke();
   textAlign(CENTER, CENTER);
   textSize(16);
-  text(msg, width / 2, height / 2);
+  text(message, width / 2, height / 2);
+}
+
+function drawBottomMessage(message) {
+  fill(40);
+  noStroke();
+  textAlign(CENTER, CENTER);
+  textSize(14);
+  text(message, width / 2, height - 30);
 }
